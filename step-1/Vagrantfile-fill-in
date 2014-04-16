@@ -1,0 +1,58 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+# Relative to Vagrantfile; most of these are default values
+# See http://docs.vagrantup.com/v2/provisioning/chef_solo.html
+# and http://docs.vagrantup.com/v2/provisioning/chef_common.html
+CHEF_COOKBOOKS_PATH = "./cookbooks"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+# cachier and omnibus plugins should come first!
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.auto_detect = true
+  end
+
+  # if Vagrant.has_plugin?("vagrant-omnibus")
+  #  config.omnibus.chef_version = :latest
+  #  config.omnibus.chef_version = "11.6.0"
+  # end
+
+  # Vagrant box to build upon
+  config.vm.box = VAGRANT_BOX_NAME
+  # The url from where 'config.vm.box' box will be fetched if it doesn't
+  # already exist on the host.
+  config.vm.box_url = VAGRANT_BOX_URL
+
+  config.vm.provider :virtualbox do |v|
+    v.customize ["modifyvm", :id, "--memory", VM_RAM_SIZE_MB]
+    v.customize ["modifyvm", :id, "--name", VM_DISPLAY_NAME]
+    v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+  end
+
+  # Create a private network using a specific IP
+  config.vm.network :private_network, ip: VM_PRIVATE_NETWORK_IP
+
+  # Enable provisioning with chef solo, specifying a cookbooks path, roles
+  # path, and data_bags path (all relative to this Vagrantfile), and adding
+  # some recipes and/or roles.
+  #
+  config.vm.provision :chef_solo do |chef|
+    chef.provisioning_path = "/tmp/vagrant-chef-solo"
+    chef.file_cache_path = chef.provisioning_path
+    chef.cookbooks_path = CHEF_COOKBOOKS_PATH
+
+    chef.add_recipe "zendserver::single"
+    # JSON attributes, to override defaults or supply required values:
+    chef.json = {
+      :zendserver => {
+        :version => 'TK',
+        :phpversion => 'TK',
+        :adminpassword => 'TK',
+        :apikeyname => 'TK',
+        :apikeysecret => 'TK',
+      }
+    }
+  end
+end

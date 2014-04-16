@@ -1,0 +1,21 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Ubuntu precise32 Zend Server 6.2 PHP 5.4
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "precise32"
+
+  config.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--memory", "256"]
+    vb.customize ["modifyvm", :id, "--name", "workshop-shell"]
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+  end
+
+  # Install Zend Server
+  config.vm.provision :shell, :path => "bootstrap-62-54.sh"
+
+  config.vm.network :private_network, ip: "10.230.230.20"
+
+end
